@@ -1,0 +1,156 @@
+Comentado por: Mariana Graciela Gallardo Garibay
+
+
+#include <stdio.h> //libreria
+#include <string.h> //libreria 
+#include <stdlib.h> //libreria
+#include <ctype.h> //libreria diseñada para las operaciones basicas con caracteres
+#define numhab 55 //el numero de habitaciones son 55
+FILE *fb = NULL; //crea el archivo fb
+const char fich [ ] = "fichero.dat"; //crear el txt fichero.dat que almacena caracteres
+typedef struct //crea la estructura
+{
+int num; //num es entero
+char nif [13]; //vector nim de 12 que almacena caracteres
+char nombre[45]; //vector nombre de 45 que almacena caracteres
+} Habitacion; //Nombre de la esctructura
+#define desplazamiento(n) ((n - 1) * sizeof (Habitacion)) // desplazamiento=(n-1) * tamaño de la variable Habitacion
+void inauguracion (void); //llama a la funcion inauguracion
+void entrada (void); //llama a la funcion entrada
+void salida (void); //llama a la funcion salida
+void ocupadas (void); //llama a la funcion ocupadas
+void leerRes (Habitacion * ph); //llama a la funcion leerRes
+void escribirRes (Habitacion h); //llama a la funcion escribirRes
+int main ( ) //menu que devuelve un entero
+{
+char opcion; //variable opcion que es caracter
+do { //Inicio condicion hacer mientras
+puts ("1. Inauguracion"); //imprime en pantalla
+puts ("2. Entrada "); //imprime en pantalla
+puts ("3. Salida "); //imprime en pantalla
+puts ("4. Ocupadas "); //imprime en pantalla
+puts ("5. Salir "); //imprime en pantalla
+do { //Inicio de condicion mientras 
+printf ("Elige una opción "); //imprime en pantalla
+scanf ("%c%*c", &opcion); // lee el caracter opcion
+} while (opcion < '1' || opcion > '5'); //Final de la condicion hacer mientras la opcion sea mayor que 1 y menor que 5
+switch (opcion) //menu de casos/opciones
+{
+case '1': //opcion 1
+inauguracion ( ); //llama a inauguracion
+break; //termina  opcion 1
+case '2': //opcion 2
+entrada ( ); //llama a entrada
+break; //termina opcion 2
+case '3': //opcion 3
+salida ( ); //llama a salida
+break; //termina opcion 3
+case '4': //opcion 4
+ocupadas ( ); //llama a ocupadas
+system ("pause"); //pausa el programa hasta que se presione alguna tecla
+break; //termina opcion 4
+}
+}
+while (opcion != '5'); //inicio de la condicion se ejecuta mientras la opcion no sea diferente de 5
+if (fb != NULL) fclose (fb); //si el archivo es diferente de nulo se cierra el archivo 
+}
+void inauguracion (void) //funcion inauguracion
+{
+Habitacion h; //variable h de Habitacion
+int i; //entero i
+if (fb != NULL) //Inicion condicion,si el archivo es diferente de nulo
+{
+char opcion; //caracter opcion
+printf ("Archivo ya creado, ¿ desea continuar(S/N) ?: "); //Imprime en pantalla 
+scanf ("%c%*c", &opcion); //lee el caracter opcion
+if (toupper(opcion) != 'S') return; //La condicion convierte en Mayusculas cualquier letra dada en opcion y las compara, si es diferente de S, regresa
+}
+fb = fopen (fich, "wb+"); //El archivo a traves del txt se abre escribir en binario
+for (i = 1; i <= numhab; i++) //condicion que comienza desde i hasta que i alcance el numhab
+{
+h.num = i; //la variable h de habitacion es igual a i
+strcpy (h.nif, "*"); //escribe * en h.nif
+fwrite (&h, sizeof (h), 1, fb); //escribe en h, usando el tamaño de h, de uno en uno en el archivo
+}
+fflush (fb); //limpia el archivo
+}
+void entrada (void) //funcion entrada
+{
+Habitacion h; //variable h de habitacion 
+int encontrado, nh; //entero encontrado y entero nh
+/* Búsqueda secuencial de primera habitación libre */
+encontrado = 0; //encontrado se inicializa con 0
+nh = 0; // nh se inicializa con 0
+if (fb == NULL) fb = fopen (fich, "rb+"); //si el archivo es nulo, entonces se abre el txt para leer en binario
+fseek (fb, 0L, SEEK_SET); //en el archivo fb se mueve a OL desde el inicio del archivo
+while ((nh < numhab) && !encontrado) //mientras el nh sea mayor que numhab y sea diferente de encontrado
+{
+fread (&h, sizeof (h), 1, fb); //se abre archivo h del tamaño h y se escribe de uno en uno
+nh++; //nh se suma de uno en uno
+if (strcmp (h.nif ,"*") == 0) /* Habitación libre */ //compara cadenas de h.nif y sus * si son iguales entra la condicion
+{
+encontrado = 1; //la variable encontrado vale 1
+leerRes (&h); //manda a llamar a funcion leer
+fseek (fb, desplazamiento (h.num), SEEK_SET);//en el archivo fb hay un desplazamiento del tamaño h.num desde el inicio del archivo
+fwrite (&h, sizeof (h), 1, fb); //escribe de uno en uno en el archivo h del tamaño de h 
+puts ("Datos grabados"); //imprime en pantalla
+}
+}
+if (!encontrado) puts ("Hotel completo "); //si es diferente de encontrado imprime hotel completo
+fflush (fb); //limpia el archivo
+}
+void salida (void) //funcion salida
+{
+Habitacion h; //variable h de habitacion
+int n; // n entero
+char r; //caracter r
+if (fb == NULL) { //si el archivo fb es nulo
+	fb = fopen (fich, "rb+"); //el archivo se abre en el tx para leer en binario
+}
+printf ("Numero de habitacion: "); //imprime en pantalla
+scanf ("%d%*c",&n); //lee la variable  caracter n
+fseek (fb, desplazamiento (n), SEEK_SET); //en fb existe un desplazamiento del tamaño n desde el inicio del archivo
+fread (&h, sizeof (h), 1, fb); //lee de h, de su tamaño h, de uno en uno en el archivo
+if(strcmp (h.nif,"*") != 0) //compara de h.nif y *, si son diferentes cumple la condicional
+{
+	escribirRes (h); //llama a la funcion 
+	printf ("¿Son correctos los datos?(S/N) "); //imprime en pantalla 
+	scanf ("%c%*c" ,&r); //lee la variable caracter respuesta
+if (toupper (r) == 'S') //la respuesta la convierte en maysucula y verifica si es una S
+{
+strcpy (h.nif, "*"); //inserta los asterisco en h.nif
+fseek (fb, sizeof (h), SEEK_CUR);/* se posiciona de nuevo */ //del archivo fb se desplaza al tamaño de h iniciando desde la posicion donde se encuentra
+fwrite (&h, sizeof (h), 1, fb);  //desde la variable h se escribe de uno en uno del tamaño de h en fb
+}
+}
+else //parte de la condicional if 
+puts ("La habitacion figura como libre"); //imprime en la pantalla
+fflush (fb); //limpia el archivo
+}
+void ocupadas (void) { //funcion ocupadas
+Habitacion h; //variable h de Habitacion
+int n; //entero n
+if (fb == NULL) fb = fopen (fich, "rb+"); //si el archivo es nulo, se abre el txt para leer binarios
+fseek (fb, 0L, SEEK_SET); //del archivo fb se desplaza a OL desde el inicio del archivo
+puts (" Numero \t NIF \t\t Nombre"); //imprime en pantalla
+puts (" habitacion "); //imprime en pantalla
+for (n = 1 ; n <= numhab; n++) //ciclo iterativo de con n=1 hasta que n sea mayor o igual a numhab, i va de uno en uno 
+{
+fread (&h, sizeof (h), 1, fb); //se lee los datos del archivo v, de tamaño h, en uno en uno
+if (strcmp (h.nif ,"*") != 0) //busca que h.nif y * sean diferentes
+escribirRes (h); //llama a la funcion
+}
+}
+void leerRes (Habitacion *ph) //funcion leerRes
+{
+printf ("Nif: "); //imprime en pantalla
+gets (ph -> nif); //la variable ph se almacena en nif
+printf ("Nombre "); //imprime en pantalla
+gets (ph -> nombre); //la variable ph se almacena en nombre
+}
+void escribirRes (Habitacion h) //funcion escribirRes
+{
+printf ("\t %d", h.num); //imprime lo que este almacenado en h.num
+printf ("\t%s\t", h.nif); //imprime lo que esta almacenado en h.nif
+printf ("\t%s\n", h.nombre); //imprime lo que esta almancenado en h.nombre
+}
